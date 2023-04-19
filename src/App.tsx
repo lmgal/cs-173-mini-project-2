@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useWallet } from './utils/useWallet'
 import { useTezos } from './utils/useTezos'
 
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import { Alert, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Snackbar, TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Tabs from '@mui/material/Tabs'
@@ -16,7 +14,7 @@ import TabPanel from './components/TabPanel'
 
 function App() {
   const useWalletReturn = useWallet()
-  const { wallet, connectWallet, disconnectWallet, getActiveAccount } = useWalletReturn
+  const { wallet } = useWalletReturn
   const { tezos } = useTezos(wallet)
   // States
   const [tabValue, setTabValue] = useState(0)
