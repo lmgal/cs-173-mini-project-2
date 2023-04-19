@@ -4,7 +4,7 @@ import { useTezos } from './utils/useTezos'
 
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material'
+import { Alert, FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, Snackbar, TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
@@ -23,6 +23,10 @@ function App() {
   const [depositAmount, setDepositAmount] = useState('')
   const [isOwner, setIsOwner] = useState(true)
   const [secret, setSecret] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [isSnackOpen, setIsSnackOpen] = useState(false)
+  const [isSnackSuccess, setIsSnackSuccess] = useState(true)
+  const [snackMsg, setSnackMsg] = useState('')
 
   const a11yProps = (index: number) => {
     return {
@@ -33,6 +37,7 @@ function App() {
 
   const depositOwner = async () => {
     try {
+      setLoading(true)
       const contract = await tezos?.wallet.at(import.meta.env.CONTRACT_ADDRESS as string)
       const op = await contract?.methods.addBalanceOwner()
         .send({
@@ -41,8 +46,15 @@ function App() {
         })
 
       await op?.confirmation(1)
+      setSnackMsg('Deposit successful')
+      setIsSnackSuccess(true)
     } catch (err) {
-      throw err
+      // @ts-ignore
+      setSnackMsg('Deposit failed: ' + err.message)
+      setIsSnackSuccess(false)
+    } finally {
+      setLoading(false)
+      setIsSnackOpen(true)
     }
   }
 
@@ -56,8 +68,15 @@ function App() {
         })
 
       await op?.confirmation(1)
+      setSnackMsg('Deposit successful')
+      setIsSnackSuccess(true)
     } catch (err) {
-      throw err
+      // @ts-ignore
+      setSnackMsg('Deposit failed: ' + err.message)
+      setIsSnackSuccess(false)
+    } finally {
+      setLoading(false)
+      setIsSnackOpen(true)
     }
   }
 
@@ -68,8 +87,15 @@ function App() {
         .send()
 
       await op?.confirmation(1)
+      setSnackMsg('Claim successful')
+      setIsSnackSuccess(true)
     } catch (err) {
-      throw err
+      // @ts-ignore
+      setSnackMsg('Claim failed: ' + err.message)
+      setIsSnackSuccess(false)
+    } finally {
+      setLoading(false)
+      setIsSnackOpen(true)
     }
   }
 
@@ -82,13 +108,29 @@ function App() {
         .send()
 
       await op?.confirmation(1)
+      setSnackMsg('Claim successful')
+      setIsSnackSuccess(true)
     } catch (err) {
-      throw err
+      // @ts-ignore
+      setSnackMsg('Claim failed: ' + err.message)
+      setIsSnackSuccess(false)
+    } finally {
+      setLoading(false)
+      setIsSnackOpen(true)
     }
   }
 
   return (
     <>
+      <Snackbar open={isSnackOpen} autoHideDuration={6000} onClose={() => setIsSnackOpen(false)}>
+        <Alert 
+          onClose={() => setIsSnackOpen(false)} 
+          severity={isSnackSuccess ? "success" : "error"} 
+          sx={{ width: '100%' }}
+        >
+          {snackMsg}
+        </Alert>
+      </Snackbar>
       <Navbar useWallet={useWalletReturn} />
       <Grid container p={10}>
         <Grid xs={12} p={1}>
@@ -130,7 +172,9 @@ function App() {
             <Grid xs={12} p={1}>
               <Button
                 variant='contained'
-                onClick={isOwner ? depositOwner : depositCounterParty}>
+                disabled={loading}
+                onClick={isOwner ? depositOwner : depositCounterParty}
+              >
                 Deposit
               </Button>
             </Grid>
@@ -149,6 +193,7 @@ function App() {
             <Grid xs={12} p={1}>
               <Button
                 variant='contained'
+                disabled={loading}
                 onClick={isOwner ? claimOwner : claimCounterParty}>
                 Claim
               </Button>
