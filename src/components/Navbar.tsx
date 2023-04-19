@@ -43,10 +43,10 @@ export default function Navbar(props: NavbarProps) {
                             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                                 {activeAccount}
                             </Typography>
-                            <Button color="inherit" style={{color: 'red'}} onClick={disconnect}>Disconnect</Button>
+                            <Button color="inherit" variant='outlined' onClick={disconnect}>Disconnect</Button>
                         </>
                     ) : 
-                        <Button color="inherit" style={{color: 'green'}} onClick={connect}>Connect</Button>
+                        <Button color="inherit" variant='outlined' onClick={connect}>Connect</Button>
                     }
                 </Toolbar>
             </AppBar>

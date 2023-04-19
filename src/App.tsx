@@ -4,11 +4,12 @@ import { useTezos } from './utils/useTezos'
 
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
-import { Grid, TextField } from '@mui/material'
+import { FormControl, FormControlLabel, FormLabel, Grid, Radio, RadioGroup, TextField } from '@mui/material'
 import Box from '@mui/material/Box'
 import Tabs from '@mui/material/Tabs'
 import Tab from '@mui/material/Tab'
 import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
 
 import Navbar from './components/Navbar'
 import TabPanel from './components/TabPanel'
@@ -20,6 +21,8 @@ function App() {
   // States
   const [tabValue, setTabValue] = useState(0)
   const [depositAmount, setDepositAmount] = useState('')
+  const [isOwner, setIsOwner] = useState(true)
+  const [secret, setSecret] = useState('')
 
   const a11yProps = (index: number) => {
     return {
@@ -30,14 +33,56 @@ function App() {
 
   const depositOwner = async () => {
     try {
-      const contract = await tezos?.wallet.at(process.env.CONTRACT_ADDRESS as string)
+      const contract = await tezos?.wallet.at(import.meta.env.CONTRACT_ADDRESS as string)
       const op = await contract?.methods.addBalanceOwner()
         .send({
-          amount: Number.parseFloat(depositAmount)
+          amount: Number.parseFloat(depositAmount),
+          mutez: false
         })
 
       await op?.confirmation(1)
-    } catch (err){
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const depositCounterParty = async () => {
+    try {
+      const contract = await tezos?.wallet.at(import.meta.env.CONTRACT_ADDRESS as string)
+      const op = await contract?.methods.addBalanceCounterparty()
+        .send({
+          amount: Number.parseFloat(depositAmount),
+          mutez: false
+        })
+
+      await op?.confirmation(1)
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const claimOwner = async () => {
+    try {
+      const contract = await tezos?.wallet.at(import.meta.env.CONTRACT_ADDRESS as string)
+      const op = await contract?.methods.claimOwner()
+        .send()
+
+      await op?.confirmation(1)
+    } catch (err) {
+      throw err
+    }
+  }
+
+  const claimCounterParty = async () => {
+    try {
+      const contract = await tezos?.wallet.at(import.meta.env.CONTRACT_ADDRESS as string)
+      const op = await contract?.methods.claimCounterparty({
+        secret: secret
+      })
+        .send()
+
+      await op?.confirmation(1)
+    } catch (err) {
       throw err
     }
   }
@@ -46,25 +91,69 @@ function App() {
     <>
       <Navbar useWallet={useWalletReturn} />
       <Grid container p={10}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-            <Tab label="Deposit" {...a11yProps(0)} />
-            <Tab label="Claim" {...a11yProps(1)} />
-          </Tabs>
-        </Box>
+        <Grid xs={12} p={1}>
+          <Typography variant='h3'>Escrow Contract</Typography>
+        </Grid>
+        <Grid xs={12} p={1}>
+          <FormControl>
+            <FormLabel>Identity</FormLabel>
+            <RadioGroup
+              value={isOwner}
+              onChange={(e) => setIsOwner(e.target.value === 'true')}
+            >
+              <FormControlLabel value={'true'} control={<Radio />} label="Owner" />
+              <FormControlLabel value={'false'} control={<Radio />} label="Counterparty" />
+            </RadioGroup>
+          </FormControl>
+        </Grid>
+        <Grid xs={12} p={1}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+              <Tab label="Deposit" {...a11yProps(0)} />
+              <Tab label="Claim" {...a11yProps(1)} />
+            </Tabs>
+          </Box>
+        </Grid>
         <TabPanel value={tabValue} index={0}>
-          <Typography variant='h6'>Deposit</Typography>
-          <TextField 
-            value={depositAmount} 
-            onChange={(e) => setDepositAmount(e.target.value)} 
-            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
-            label="Amount"
-          />
-
+          <Grid container>
+            <Grid xs={12} p={1}>
+              <Typography variant='h6'>Deposit</Typography>
+            </Grid>
+            <Grid xs={12} p={1}>
+              <TextField
+                value={depositAmount}
+                onChange={(e) => setDepositAmount(e.target.value)}
+                inputProps={{ inputMode: 'numeric', pattern: '[0-9]+(\.[0-9]*)' }}
+                label="Amount"
+              />
+            </Grid>
+            <Grid xs={12} p={1}>
+              <Button
+                variant='contained'
+                onClick={isOwner ? depositOwner : depositCounterParty}>
+                Deposit
+              </Button>
+            </Grid>
+          </Grid>
         </TabPanel>
         <TabPanel value={tabValue} index={1}>
           <Typography variant='h6'>Claim</Typography>
-
+          <Grid container>
+            {!isOwner && <Grid xs={12} p={1}>
+              <TextField
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                label="Secret"
+              />
+            </Grid>}
+            <Grid xs={12} p={1}>
+              <Button
+                variant='contained'
+                onClick={isOwner ? claimOwner : claimCounterParty}>
+                Claim
+              </Button>
+            </Grid>
+          </Grid>
         </TabPanel>
       </Grid>
     </>

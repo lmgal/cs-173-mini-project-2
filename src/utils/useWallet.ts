@@ -8,7 +8,7 @@ export const useWallet = () => {
         setWallet(new BeaconWallet({ 
             name: "Tezos Escrow Dapp" 
         }))
-    })
+    }, [])
 
     const connectWallet = async () => {
         return await wallet?.requestPermissions({

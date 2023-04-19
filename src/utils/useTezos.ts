@@ -7,7 +7,7 @@ export const useTezos = (wallet: BeaconWallet | null) => {
 
     useEffect(() => {
         if (wallet) {
-            const tezos = new TezosToolkit(process.env.RPC_URL as string)
+            const tezos = new TezosToolkit(import.meta.env.RPC_URL as string)
             tezos.setWalletProvider(wallet)
             setTezos(tezos)
         }
